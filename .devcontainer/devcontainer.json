@@ -1,0 +1,37 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+"mounts": [ 
+  ],  
+  "containerEnv": {
+      "TZ": "America/Chicago",
+      "POETRY_VIRTUALENVS_IN_PROJECT": "true"
+  },
+  "customizations": {
+      "vscode": {
+          "extensions": [
+              "ms-azuretools.vscode-docker",
+              "ms-vscode.makefile-tools",
+              "shd101wyy.markdown-preview-enhanced",
+              "yzhang.markdown-all-in-one",
+              "hediet.vscode-drawio",
+              "streetsidesoftware.code-spell-checker",
+              "takumii.markdowntable",
+              "csholmq.excel-to-markdown-table",
+              "janisdd.vscode-edit-csv",
+              "mechatroner.rainbow-csv",
+              "amazonwebservices.aws-toolkit-vscode",
+              "mark-tucker.aws-cli-configure",
+              "boto3typed.boto3-ide"
+          ]
+      }
+  },
+  "features": {
+      "ghcr.io/devcontainers/features/github-cli:1": {},
+      "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  }
+  
+}
