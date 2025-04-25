@@ -19,10 +19,11 @@ USER nonroot
 RUN <<EOT
 
     pip install --upgrade pip
-    # pip install poetry==1.7.1
 
+    # Install UV
     curl -LsSf https://astral.sh/uv/install.sh | sh
 
+    # Install default shell
     command -v zsh | sudo tee -a /etc/shells
     chsh nonroot --shell /usr/bin/zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
