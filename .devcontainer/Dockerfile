@@ -1,30 +1,34 @@
-FROM mcr.microsoft.com/devcontainers/python:3.12-bullseye
+FROM cgr.dev/chainguard/python:latest-dev
+
+USER root
 
 RUN <<EOT
 
-    # Install dependencies
-    apt update && apt upgrade -y
-    apt install make curl
+    apk update && apk add posix-libc-utils && ldconfig
+    apk add zsh zsh-vcs curl wget git vim make docker
+    apk add sudo-rs shadow && echo "nonroot ALL = (ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers && echo y | pwck -q || true
 
-    # Install pip
-    pip install --upgrade pip
-    pip install poetry==1.7.1 mkdocs==1.5.3
-
-    # Install AWS CLI v2
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o ~/awscliv2.zip
+    unzip ~/awscliv2.zip
     sudo ./aws/install --bin-dir /usr/bin --install-dir /usr/aws-cli --update
 
 EOT
 
-USER vscode
+USER nonroot
 
 RUN <<EOT
 
-   # Install UV
-   curl -LsSf https://astral.sh/uv/install.sh | sh
+    pip install --upgrade pip
+    # pip install poetry==1.7.1
 
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    command -v zsh | sudo tee -a /etc/shells
+    chsh nonroot --shell /usr/bin/zsh
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 EOT
+
+COPY .devcontainer/dotfiles/* /home/nonroot
+
+ENTRYPOINT ["/bin/sh","-c","sleep infinity"]
