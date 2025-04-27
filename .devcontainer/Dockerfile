@@ -5,7 +5,7 @@ USER root
 RUN <<EOT
 
     apk update && apk add posix-libc-utils && ldconfig
-    apk add zsh zsh-vcs curl wget git vim make docker docker-compose
+    apk add zsh zsh-vcs curl wget git vim make docker docker-compose jq
     apk add sudo-rs shadow && echo "nonroot ALL = (ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers && echo y | pwck -q || true
 
     curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o ~/awscliv2.zip
