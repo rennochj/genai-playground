@@ -1,13 +1,16 @@
-.PHONY: run install clean
+.PHONY: run install clean format
 
 install:
 	uv pip install --link-mode=copy -e '.[dev]'
 
-run:
+run: format
 	python main.py
 
 list-models:
 	curl -s  http://model-runner.docker.internal/models | jq
+
+format:
+	black .
 
 clean:
 	find . -type d -name __pycache__ -exec rm -r {} +
