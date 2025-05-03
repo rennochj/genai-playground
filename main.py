@@ -1,103 +1,121 @@
+"""
+Llama4 Integration with LangChain
+
+This module provides integration with Llama4 LLM via Ollama, using LangChain as
+the core framework for model interaction.
+"""
+
 # Standard library imports
 import sys
 
-# Local imports
-from chat import ChatCompletionError, ChatMessage, request
-from config import logger, settings
+import structlog
 
-"""
-Weather Information Assistant
+# Third-party imports
+from langchain.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
+from langchain_ollama import ChatOllama  # Changed from OllamaLLM to ChatOllama
+from pydantic import BaseModel, Field
 
-This module implements a chat-based interface to retrieve weather information
-using AI model capabilities. It defines the necessary tools for weather data 
-retrieval and handles the communication with the AI model.
+# Setup structured logging
+logger = structlog.get_logger()
 
-The script sets up a conversation with specific weather-related queries and
-processes the AI model's responses, including potential tool calls for
-retrieving actual weather data.
-"""
+# ------------------------------------------------------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------------
+
+class ModelConfig(BaseModel):
+    """Configuration for model."""
+
+    model_name: str = Field(..., description="Name of the Llama4 model")
+    model_url: str = Field(..., description="URL of the Ollama service")
+    temperature: float = Field(0.7, description="Temperature for response generation")
+    system_prompt: str = Field(
+        "You are a helpful assistant.", description="System prompt for the model"
+    )
+
+
+# ------------------------------------------------------------------------------------------------------------------------
 
 
 def main() -> None:
     """
-    Main entry point for the weather assistant application.
+    Main entry point for the application.
 
     This function:
-    1. Defines the tools available to the AI model (get_weather function)
-    2. Sets up the initial messages for the conversation
-    3. Sends the request to the AI model
-    4. Prints the response or handles errors
+    1. Creates a model configuration for the Llama4 LLM
+    2. Initializes the LangChain integration with the model
+    3. Sends a test query to the model
+    4. Handles the response or any errors that occur
+
+    The function demonstrates a simple workflow for integrating with Llama4
+    via LangChain and Ollama, showing how to configure, initialize, and
+    query the model in a structured way.
 
     Returns:
         None
     """
-    # Define the weather tool that allows the model to request weather information
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "get_weather",
-                "description": "Get today's weather and temperature for a location. Use this function to determine the temperature, precipitation like rain, and other weather conditions.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "Location to get the weather for",
-                        },
-                        "unit": {
-                            "type": "string",
-                            "enum": ["celsius", "fahrenheit"],
-                            "description": "Temperature unit",
-                        },
-                    },
-                    "required": ["location"],
-                },
-            },
-        }
-    ]
 
-    # Set up the conversation messages, starting with system instructions and a user query
-    messages = [
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant. Use the tools to retreive weather information to resond to any questions related to weather, temperature, and precipitaton.",
-            tool_calls=[],
-            tool_call_id="",
-            name=None,
-            function_call=None,
-        ),
-        ChatMessage(
-            role="user",
-            content="Is it currently raining in San Antonio?",
-            # content="Get the current weather in san antonio and then determine if it is raining?",
-            tool_calls=[],
-            tool_call_id="",
-            name=None,
-            function_call=None,
-        ),
-    ]
+    # Create configuration with required parameters for the Llama4 model
+    # This defines how the model will behave, including the temperature setting
+    # that controls creativity and the system prompt that sets the model's role
+    config = ModelConfig(
+        model_name="llama4",
+        model_url="http://mercury.local:11434",
+        temperature=0.7,
+        system_prompt="You are a helpful assistant powered by Llama4. Provide informative and thoughtful responses.",
+    )
 
+    # Initialize Llama4 integration by creating a chain of prompt template and LLM
+    # This may fail if the Ollama server is not reachable or if the model is unavailable
     try:
-        # Send the request to the AI model with the defined tools and messages
-        response = request(
-            model_url=settings.model_url,
-            model_name=settings.model_name,
-            messages=messages,
-            tools=tools,
+
+        llm = ChatOllama(
+            model=config.model_name,
+            base_url=config.model_url,
+            temperature=config.temperature,
         )
-        # Output the model's response as formatted JSON
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessagePromptTemplate.from_template(config.system_prompt),
+                HumanMessagePromptTemplate.from_template("{input}"),
+            ]
+        )
+
+        chain = prompt | llm
+
+        # Test the model with a sample AI-related query
+        # The query function handles sending the request and processing the response
+        query_text = "write a haiku about NASCAR racing."
+        response = chain.invoke({"input": query_text})
+
         print(response.model_dump_json(indent=2))
 
-    except ChatCompletionError as e:
-        # Log and exit if there's an error with the chat completion
-        logger.error("chat_completion_failed", error=str(e))
+    except ValueError as e:
+        # Log the error with detailed information and exit the application
+        logger.error("value_error", error=str(e))
+        sys.exit(1)
+    except TypeError as e:
+        # Log the error with detailed information and exit the application
+        logger.error("type_error", error=str(e))
+        sys.exit(1)
+    except RuntimeError as e:
+        # Log the error with detailed information and exit the application
+        logger.error("runtime_error", error=str(e))
+        sys.exit(1)
+    except ConnectionError as e:
+        # Log the error with detailed information and exit the application
+        logger.error("connection_error", error=str(e))
+        sys.exit(1)
+    except TimeoutError as e:
+        # Log the error with detailed information and exit the application
+        logger.error("timeout_error", error=str(e))
         sys.exit(1)
 
 
-# --------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     main()

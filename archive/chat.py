@@ -184,6 +184,7 @@ def request(
     tools: Optional[list[Dict[str, Any]]] = None,
     tool_choice: Optional[str] = "auto",
     tool_response_pending: bool = False,
+    use_mcp: bool = False,
     **kwargs: Any,
 ) -> ChatResponse:
     """
@@ -205,6 +206,7 @@ def request(
         tools: Optional list of tool definitions the model can use
         tool_choice: Controls how the model uses tools ("auto", "none", or specific tool)
         tool_response_pending: Flag indicating if we're processing tool execution results
+        use_mcp: Use the Model Context Protocol client instead of direct API calls
         **kwargs: Additional parameters to pass to the API
 
     Returns:
@@ -213,6 +215,24 @@ def request(
     Raises:
         ChatCompletionError: If the API request fails or returns invalid data
     """
+    # If MCP client is requested, use it instead of the direct API approach
+    if use_mcp:
+        try:
+            # Import here to avoid circular imports
+            import asyncio
+
+            from archive.mcp_client import create_mcp_client
+
+            # Create an MCP client and run the request
+            mcp_client = create_mcp_client(model_url, model_name)
+            return asyncio.run(mcp_client.request(messages, tools))
+        except ImportError:
+            logger.warning("mcp_client_import_failed - Using fallback API approach")
+        except Exception as e:
+            logger.error("mcp_client_request_failed - error: %s", str(e))
+            raise ChatCompletionError(f"Failed to make MCP client request: {str(e)}") from e
+
+    # Continue with the existing implementation if not using MCP
     url = model_url
 
     payload = {

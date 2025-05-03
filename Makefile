@@ -1,7 +1,10 @@
-.PHONY: run install clean format
+.PHONY: run install clean format install-deps
 
 install:
 	uv pip install --link-mode=copy -e '.[dev]'
+
+install-deps:
+	uv pip install -r requirements.txt
 
 run: format
 	python main.py
