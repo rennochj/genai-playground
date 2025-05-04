@@ -41,28 +41,42 @@ class ModelConfig(BaseModel):
 
 def main() -> None:
     """
-    Main entry point for the application.
+    Main entry point for the application that integrates with the Llama4 LLM.
 
-    This function:
-    1. Creates a model configuration for the Llama4 LLM
-    2. Initializes the LangChain integration with the model
-    3. Sends a test query to the model
-    4. Handles the response or any errors that occur
+    This function orchestrates the complete workflow for interacting with the Llama4
+    language model through LangChain's abstractions and Ollama's hosting platform.
 
-    The function demonstrates a simple workflow for integrating with Llama4
-    via LangChain and Ollama, showing how to configure, initialize, and
-    query the model in a structured way.
+    The implementation follows these steps:
+    1. Creates a model configuration with parameters tailored for Llama4
+       - Sets appropriate temperature for balanced responses
+       - Configures system prompt to define the model's behavior and persona
+
+    2. Initializes the LangChain components:
+       - Constructs a ChatOllama instance configured for the target model
+       - Creates a structured chat prompt template with system and user message slots
+       - Chains these components using LangChain's pipe operator
+
+    3. Queries the model with a demonstration prompt
+       - Sends a creative writing request to showcase model capabilities
+       - Formats and displays the JSON response
+
+    4. Implements comprehensive error handling:
+       - Catches a variety of potential exceptions (type errors, connection issues, etc.)
+       - Logs detailed error information with structured logging
+       - Gracefully exits with appropriate status codes
 
     Returns:
-        None
+        None: This function doesn't return a value but prints the model's response
+              to standard output and exits with an appropriate status code.
     """
 
     # Create configuration with required parameters for the Llama4 model
     # This defines how the model will behave, including the temperature setting
     # that controls creativity and the system prompt that sets the model's role
     config = ModelConfig(
-        model_name="llama4",
-        model_url="http://mercury.local:11434",
+        # model_name="llama4",
+        model_name="smollm2",
+        model_url="http://mars.local:11434",
         temperature=0.7,
         system_prompt="You are a helpful assistant powered by Llama4. Provide informative and thoughtful responses.",
     )
