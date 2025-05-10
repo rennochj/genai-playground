@@ -3,7 +3,7 @@ import sys
 
 # Local imports
 from archive.chat import ChatCompletionError, ChatMessage, request
-from config import logger, settings
+from model import logger, settings
 
 """
 Weather Information Assistant

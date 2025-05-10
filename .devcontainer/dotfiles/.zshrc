@@ -105,3 +105,9 @@ source $ZSH/oh-my-zsh.sh
 export PATH=~/.local/bin:$PATH
 
 export OLLAMA_HOST=0.0.0.0:11434
+
+export LANGSMITH_TRACING="true"
+export LANGSMITH_API_KEY="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"
+
+export UV_LINK_MODE=copy
+

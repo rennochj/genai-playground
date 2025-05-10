@@ -86,8 +86,6 @@ class ChatResponse(BaseModel):
 class ChatCompletionError(Exception):
     """Custom exception for chat completion errors."""
 
-    pass
-
 
 # Load settings
 settings = ModelSettings()
@@ -123,9 +121,7 @@ def make_chat_completion_request(
         )  # Log first 500 chars
 
         if not response.ok:
-            logger.error(
-                "request_failed", status_code=response.status_code, error=response.text, url=url
-            )
+            logger.error("request_failed", status_code=response.status_code, error=response.text, url=url)
             response.raise_for_status()
 
         return ChatResponse.model_validate(response.json())
