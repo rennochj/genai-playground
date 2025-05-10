@@ -24,7 +24,7 @@ list-models:
 # Sets line length to 122 and applies fixes automatically
 format:
 	ruff format --line-length 120 app/
-	ruff check --line-length 120 --select I --fix app/
+	ruff check --line-length 120 --fix app/
 
 # Clean up generated files and caches
 # Removes Python cache files and other temporary directories
