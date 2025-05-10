@@ -52,5 +52,5 @@
         }
     },
     "remoteUser": "nonroot",
-    "postCreateCommand": "pip install -e '.[dev]' && pre-commit uninstall"
+    "postCreateCommand": "pip install -e '.[dev]' && pre-commit uninstall && python3.13 -m pip install --upgrade pip"
 }
