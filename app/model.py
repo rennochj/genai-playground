@@ -7,10 +7,8 @@ with appropriate settings loaded from environment variables.
 
 import os
 from abc import abstractmethod
-from typing import Any
 
 from dotenv import load_dotenv
-from langchain.schema.runnable import Runnable
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, SecretStr
 
@@ -23,7 +21,7 @@ load_dotenv()
 
 class XChatConfig(BaseModel):
     @abstractmethod
-    def build(self) -> Runnable[list[Any], Any]:
+    def build(self) -> ChatOpenAI:
         """Factory method to create a ChatOpenAI instance."""
 
 
@@ -44,7 +42,7 @@ class XOpenAIConfig(XChatConfig):
         description="Set the temperature for response generation",
     )
 
-    def build(self) -> Runnable[list[Any], Any]:
+    def build(self) -> ChatOpenAI:
         """Create a ChatOpenAI instance."""
         return ChatOpenAI(
             model=self.model_name,

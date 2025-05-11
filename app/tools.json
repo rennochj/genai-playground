@@ -1,0 +1,13 @@
+{
+    "math": {
+        "command": "python",
+        "args": [
+            "/workspaces/genai-playground/app/tools/math_server.py"
+        ],
+        "transport": "stdio"
+    },
+    "weather": {
+        "url": "http://localhost:8000/sse",
+        "transport": "sse"
+    }
+}

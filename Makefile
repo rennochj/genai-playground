@@ -15,6 +15,10 @@ install-deps:
 run: format
 	python app/main.py
 
+
+weather:
+	python app/tools/weather_server.py
+
 # List available models from the model runner service
 # Uses curl to fetch and jq to format the JSON response
 list-models:

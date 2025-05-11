@@ -5,49 +5,101 @@ This module provides configuration classes for creating LangGraph execution grap
 that control the flow of requests and responses through the language model system.
 """
 
-from typing import Any, List, TypedDict
+import json
+from abc import abstractmethod
+from typing import List, TypedDict
 
-from langchain.schema.runnable import Runnable
+import structlog
 from langchain_core.messages import BaseMessage
+from langchain_mcp_adapters.client import MultiServerMCPClient  # type: ignore
+from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.graph import CompiledGraph
+from langgraph.prebuilt import create_react_agent
+from pydantic import Field
+
+# ------------------------------------------------------------------------------------------------------------------------
+
+# Create the logger with proper namespace for this module
+logger = structlog.get_logger("app.graphs")
+
+# ------------------------------------------------------------------------------------------------------------------------
 
 
-class MessageState(TypedDict):
+class XMessageState(TypedDict):
     """Define the state structure for message-based graphs."""
 
     messages: List[BaseMessage]
     """A dictionary containing a list of messages exchanged in the graph."""
 
 
-class XSimpleGraphConfig:
+# ------------------------------------------------------------------------------------------------------------------------
+
+
+class XBaseGraph:
+    @abstractmethod
+    async def ainvoke(self, messages: List[BaseMessage]) -> XMessageState:
+        """Invoke the graph with a list of messages and return the final state."""
+        pass
+
+
+# ------------------------------------------------------------------------------------------------------------------------
+
+
+class XSimpleGraphConfig(XBaseGraph):
     """Configure a simple sequential graph for language model execution."""
 
-    def build(self, llm: Runnable[list[Any], Any]) -> StateGraph:
-        """
-        Create a simple LangGraph with a single LLM node.
+    model: ChatOpenAI = Field(..., description="The language model runnable to use in the graph")
+    graph: CompiledGraph = Field(..., description="The LangGraph instance to use for the graph execution")
 
-        Args:
-            llm: The language model runnable to use in the graph
+    def __init__(self, model: ChatOpenAI) -> None:
+        def llm_node(state: XMessageState) -> XMessageState:
+            logger.debug("starting llm_node", state=state)
 
-        Returns:
-            A configured StateGraph ready for compilation
-        """
-
-        # Define the LLM node function
-        def llm_node(state: MessageState) -> MessageState:
-            # Extract messages from state
             messages = state["messages"]
-            # Invoke the LLM with the messages
-            response = llm.invoke(messages)
-            # Return updated state with response added
+            response = model.invoke(messages)
+
+            logger.debug("ending llm_node", response=response)
+
             return {"messages": messages + [response]}
 
-        # Create the graph
-        builder = StateGraph(MessageState)
-        builder.add_node("llm", llm_node)
+        builder = StateGraph(XMessageState)
+        builder.add_node("model", llm_node)
 
-        # Add edges
-        builder.add_edge(START, "llm")
-        builder.add_edge("llm", END)
+        builder.add_edge(START, "model")
+        builder.add_edge("model", END)
 
-        return builder
+        self.model = model
+        self.builder = builder
+        self.graph = builder.compile()
+
+    async def ainvoke(self, messages: List[BaseMessage]) -> XMessageState:
+        result = self.graph.invoke({"messages": messages})
+
+        return XMessageState(messages=result["messages"])
+
+
+# ------------------------------------------------------------------------------------------------------------------------
+
+
+class XMCPGraphConfig(XBaseGraph):
+    """Configure a simple sequential graph for language model execution."""
+
+    _model: ChatOpenAI = Field(..., description="The language model runnable to use in the graph")
+
+    def __init__(self, model: ChatOpenAI) -> None:
+        self._model = model
+
+    async def ainvoke(self, messages: List[BaseMessage]) -> XMessageState:
+        logger.debug("starting invoke", messages=messages)
+
+        with open("./app/tools.json", "r") as f:
+            config = json.load(f)
+
+        async with MultiServerMCPClient(config) as client:
+            logger.debug("starting invoke", messages=messages, tools=client.get_tools())
+            agent = create_react_agent(self._model, client.get_tools())
+            response = await agent.ainvoke({"messages": messages})
+            logger.debug("ending invoke", response=response)
+
+        return XMessageState(messages=response["messages"])
