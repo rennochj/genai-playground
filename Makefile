@@ -13,8 +13,12 @@ install-deps:
 # Run the main application 
 # Formats code before running
 run: format
-	python app/main.py
+	python app/main.py --prompt "$(PROMPT)"
 
+# Run the main application 
+# Formats code before running
+run-test: format
+	python app/main.py --prompt "What is the weather in New York? Is it raining? And, what is 12 * ( 4 + 3 )?"
 
 weather:
 	python app/tools/weather_server.py
