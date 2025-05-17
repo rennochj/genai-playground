@@ -17,6 +17,8 @@ dependencies = [
     "langchain-openai>=0.3.16",
     "autosave>=1.0.0.post1",
     "mcp[cli]>=1.8.0",
+    "langchain-mcp-adapters>=0.1.0",
+    "langgraph>=0.4.5",
 ]
 
 [project.optional-dependencies]

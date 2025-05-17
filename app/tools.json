@@ -7,7 +7,7 @@
         "transport": "stdio"
     },
     "weather": {
-        "url": "http://localhost:8000/sse",
+        "url": "http://mars.local:8000/sse",
         "transport": "sse"
     }
 }

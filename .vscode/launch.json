@@ -9,6 +9,10 @@
             "type": "debugpy",
             "request": "launch",
             "program": "app/main.py",
+            "args": [
+                "--prompt",
+                "What is the weather in New York? Is it raining? And, what is 12 * ( 4 + 3 )?"
+            ],
             "console": "integratedTerminal"
         }
     ]

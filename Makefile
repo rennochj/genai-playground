@@ -21,7 +21,11 @@ run-test: format
 	python app/main.py --prompt "What is the weather in New York? Is it raining? And, what is 12 * ( 4 + 3 )?"
 
 weather:
-	python app/tools/weather_server.py
+	docker build --tag weather:latest tools/weather
+	docker run -d --name mcp-server-weather -it --rm -p 8000:8000  weather:latest
+
+kill-weather:
+	docker kill mcp-server-weather
 
 # List available models from the model runner service
 # Uses curl to fetch and jq to format the JSON response

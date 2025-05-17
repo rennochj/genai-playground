@@ -1,0 +1,11 @@
+{
+    "servers": {
+        "weather-server": {
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/app/tools/weather_server.py"
+            ],
+            "env": {}
+        }
+    }
+}

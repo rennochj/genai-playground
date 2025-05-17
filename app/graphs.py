@@ -96,10 +96,13 @@ class XMCPGraphConfig(XBaseGraph):
         with open("./app/tools.json", "r") as f:
             config = json.load(f)
 
-        async with MultiServerMCPClient(config) as client:
-            logger.debug("starting invoke", messages=messages, tools=client.get_tools())
-            agent = create_react_agent(self._model, client.get_tools())
-            response = await agent.ainvoke({"messages": messages})
-            logger.debug("ending invoke", response=response)
+        client = MultiServerMCPClient(config)
+
+        # async with MultiServerMCPClient(config) as client:
+        tools = await client.get_tools()
+        logger.debug("starting invoke", messages=messages, tools=tools)
+        agent = create_react_agent(model=self._model, tools=tools)
+        response = await agent.ainvoke({"messages": messages})
+        logger.debug("ending invoke", response=response)
 
         return XMessageState(messages=response["messages"])
